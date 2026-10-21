@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>ACESSE JÁ | Seus links em um só lugar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --gold: #070707;
+      --gold-dark: #020202;
+      --gold-light: #070706;
+      --black: #111111;
+      --card: #020202;
+      --border: #0a0a0a;
+      --muted: #666666;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Montserrat, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+
+    .wrap {
+      width: min(920px, 100%);
+      margin: auto;
+      padding: 28px 18px 24px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      min-height: 42px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: #fdfbf7;
+      color: var(--gold-dark);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    header {
+      text-align: center;
+      padding: 12px 0 28px;
+    }
+
+   .logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;  /* <--- Aumentado de 86px para 120px (mude aqui se quiser maior ou menor) */
+    height: 120px; /* <--- Deve ser igual à largura para continuar um círculo perfeito */
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: linear-gradient(145deg, #ffffff, #faf6eb);
+    box-shadow: 0 8px 25px rgba(197, 155, 39, 0.2);
+    margin-bottom: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+    h1 {
+      font-size: clamp(32px, 7vw, 54px);
+      line-height: 1.05;
+      margin: 0;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(110deg, #000000 0%, #0c0c0c 25%, #000000 50%, #0a0a0a 75%, #080808 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shine 5s linear infinite;
+    }
+
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+
+    .subtitle {
+      color: var(--gold-dark);
+      font-size: 12px;
+      letter-spacing: 3px;
+      margin-top: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      overflow: hidden;
+      white-space: nowrap;
+      margin-inline: auto;
+      width: fit-content;
+      border-right: 2px solid var(--gold);
+      animation: type 2.4s steps(30) .3s both, caret .8s step-end infinite;
+    }
+
+    @keyframes type {
+      from { width: 0; }
+    }
+
+    @keyframes caret {
+      50% { border-color: transparent; }
+    }
+
+    .intro {
+      color: #4a4a4a;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
+      max-width: 580px;
+      margin: 0 auto 26px;
+      font-weight: 500;
+    }
+
+    .adminbar {
+      display: none;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 22px;
+    }
+
+    .adminbar.show { display: flex; }
+
+    .primary, .secondary, .danger {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s, opacity .15s;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #e5be49, var(--gold));
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(197, 155, 39, 0.3);
+    }
+
+    .secondary {
+      background: #f8f6f0;
+      border: 1px solid var(--border);
+      color: var(--gold-dark);
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .primary:hover, .secondary:hover, .danger:hover, .pill:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: wait;
+    }
+
+    .directories {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 13px;
+    }
+
+    .directory {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.9);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .dirhead {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 17px 18px;
+      border-bottom: 1px solid rgba(197, 155, 39, 0.15);
+      background: #fdfbf7;
+    }
+
+    .diricon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: linear-gradient(145deg, #e5be49, var(--gold));
+      font-size: 19px;
+      flex-shrink: 0;
+    }
+
+    .dirtext { flex: 1; }
+
+    .dirtext h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .dirtext p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 11px;
+    }
+
+    .count {
+      color: var(--gold-dark);
+      font-size: 11px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-weight: 700;
+    }
+
+    .links {
+      padding: 10px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .linkrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .link-button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      padding: 15px 17px;
+      border-radius: 12px;
+      background: var(--link-color, #292929);
+      border: 1px solid rgba(0,0,0,0.05);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      transition: transform .2s, filter .2s, box-shadow .2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .link-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      box-shadow: 0 7px 18px rgba(0,0,0,0.12);
+    }
+
+    .link-button .link-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .link-button .link-label {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .link-button .arrow {
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .linkactions {
+      display: none;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .is-admin .linkactions { display: flex; }
+
+    .mini {
+      border: 1px solid var(--border);
+      color: var(--gold-dark);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 9px;
+      cursor: pointer;
+    }
+
+    .mini:hover { background: #faf6eb; }
+
+    .empty {
+      padding: 16px 10px;
+      color: #777;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .loading {
+      padding: 26px;
+      text-align: center;
+      color: var(--gold-dark);
+      font-size: 13px;
+    }
+
+    .status {
+      min-height: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 10px 0;
+    }
+
+    .status.error { color: var(--danger); }
+
+    footer {
+      text-align: center;
+      color: var(--gold-dark);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 30px 0 12px;
+      font-weight: 700;
+    }
+
+    .modal {
+      width: min(450px, calc(100% - 28px));
+      border: 1px solid var(--gold);
+      border-radius: 20px;
+      padding: 0;
+      background: #ffffff;
+      color: #111;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.2);
+    }
+
+    .modal::backdrop {
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .modalhead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 19px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modalhead h3 {
+      margin: 0;
+      font-size: 17px;
+      color: #111;
+    }
+
+    .x {
+      border: 0;
+      background: transparent;
+      color: #666;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .modalbody {
+      padding: 20px;
+      display: grid;
+      gap: 13px;
+    }
+
+    .field { display: grid; gap: 7px; }
+
+    .field label {
+      font-size: 11px;
+      color: var(--gold-dark);
+      font-weight: 700;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      background: #fafafa;
+      color: #111;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--gold);
+      background: #fff;
+    }
+
+    .modalfoot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      padding: 0 20px 20px;
+    }
+
+    .hint {
+      font-size: 11px;
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .hide { display: none !important; }
+
+    @media (min-width: 680px) {
+      .directories { grid-template-columns: 1fr 1fr; }
+      .directory:last-child { grid-column: 1 / -1; }
+      .directory:last-child .links { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 420px) {
+      .wrap { padding: 20px 12px; }
+      .link-button { padding: 13px 11px; gap: 8px; font-size: 12px; }
+      .mini { padding: 7px; }
+      .dirhead { padding: 14px 12px; gap: 9px; }
+    }
+
+    /* Estilos dinâmicos */
+    html { scroll-behavior: smooth; }
+    body { overflow-x: hidden; background: #ffffff; }
+    .bg-fx {
+      position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+      background: radial-gradient(ellipse at top, #fdfbf7 0%, #f5f0e1 40%, #ffffff 80%);
+    }
+    .bg-fx .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .25; animation: float 18s ease-in-out infinite; }
+    .bg-fx .o1 { width: 420px; height: 420px; background: #f5dc83; top: -120px; left: -100px; }
+    .bg-fx .o2 { width: 360px; height: 360px; background: #c59b27; bottom: -120px; right: -80px; animation-delay: -6s; }
+    .bg-fx .o3 { width: 260px; height: 260px; background: #e5be49; top: 40%; left: 60%; opacity: .15; animation-delay: -12s; }
+    .bg-fx .grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(#c59b2715 1px, transparent 1px), linear-gradient(90deg, #c59b2715 1px, transparent 1px);
+      background-size: 48px 48px; mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+    }
+    @keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(60px, 40px) scale(1.1); } 66% { transform: translate(-40px, 30px) scale(.95); } }
+    #spark { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+    .logo { position: relative; animation: pulse 3s ease-in-out infinite; }
+    .logo::before {
+      content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid transparent;
+      border-top-color: var(--gold-dark); border-right-color: var(--gold); animation: spin 4s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px rgba(197, 155, 39, 0.2); } 50% { box-shadow: 0 0 35px rgba(197, 155, 39, 0.5); } }
+
+    .reveal { opacity: 0; transform: translateY(24px) scale(.98); animation: rise .7s cubic-bezier(.2, .8, .2, 1) forwards; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    .directory {
+      position: relative; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.9);
+      transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s, border-color .35s; transform-style: preserve-3d;
+    }
+    .directory::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+      background: conic-gradient(from var(--a, 0deg), transparent 0 70%, var(--gold), transparent);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; transition: opacity .4s; animation: rot 4s linear infinite;
+    }
+    @property --a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+    @keyframes rot { to { --a: 360deg; } }
+    .directory:hover { border-color: var(--gold); box-shadow: 0 18px 45px rgba(0,0,0,0.1), 0 0 25px rgba(197, 155, 39, 0.2); }
+    .directory:hover::before { opacity: 1; }
+    .diricon { transition: transform .4s; }
+    .directory:hover .diricon { transform: rotate(-8deg) scale(1.1); }
+
+    .link-button { position: relative; overflow: hidden; isolation: isolate; }
+    .link-button::after {
+      content: ""; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, #ffffff55, transparent); transform: skewX(-20deg); transition: left .6s; z-index: -1;
+    }
+    .link-button:hover::after { left: 130%; }
+    .link-button:hover { transform: translateY(-3px) scale(1.015); }
+    .link-button:active { transform: scale(.97); }
+    .link-button .arrow { transition: transform .3s; }
+    .link-button:hover .arrow { transform: translate(3px, -3px); }
+    .link-button:hover .link-icon { animation: wiggle .5s; }
+    @keyframes wiggle { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+
+    .primary {
+      background-size: 200% auto; background-image: linear-gradient(110deg, var(--gold), var(--gold-light), var(--gold));
+      transition: background-position .5s, transform .15s, box-shadow .3s;
+    }
+    .primary:hover { background-position: right center; box-shadow: 0 8px 25px rgba(197, 155, 39, 0.4); }
+    .pill { backdrop-filter: blur(8px); background: rgba(255, 255, 255, 0.8); transition: all .25s; }
+    .pill:hover { border-color: var(--gold); box-shadow: 0 0 18px rgba(197, 155, 39, 0.2); }
+    .modal[open] { animation: pop .35s cubic-bezier(.2, .9, .3, 1.3); }
+    @keyframes pop { from { opacity: 0; transform: scale(.9) translateY(20px); } }
+    footer { animation: fade 3s ease-in-out infinite alternate; }
+    @keyframes fade { from { opacity: .6; } to { opacity: 1; color: var(--gold-dark); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .reveal { opacity: 1; transform: none; } }
+  </style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="top">
+    <span id="sessionLabel" class="hint">Modo visitante</span>
+    <button id="loginBtn" class="pill"><i class="fa-solid fa-lock"></i> Área do administrador</button>
+    <button id="logoutBtn" class="pill hide">Sair</button>
+  </div>
+  <header>
+    <div class="logo">
+      <img src="img/Gemini_Generated_Image_z827erz827erz827 (2).png" alt="Bauer Barbearia" class="logo-img">
+    </div>
+    <h1>BAUER</h1>
+    <div class="subtitle">----BARBEARIA----</div>
+  </header>
+  <p class="intro">Acesse rapidamente os links e desfrute de todas nossas funcionalidades.</p>
+  <div id="adminBar" class="adminbar">
+    <button id="addBtn" class="primary"><i class="fa-solid fa-plus"></i> Adicionar link</button>
+    <button id="refreshBtn" class="secondary"><i class="fa-solid fa-rotate"></i> Atualizar lista</button>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <main id="directories" class="directories">
+    <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Carregando seus links...</div>
+  </main>
+  <footer>ORGANIZAÇÃO &nbsp;•&nbsp; PRATICIDADE &nbsp;•&nbsp; ESTILO</footer>
+</div>
+
+<dialog class="modal" id="loginModal">
+  <form id="loginForm">
+    <div class="modalhead">
+      <h3><i class="fa-solid fa-shield-halved" style="color:var(--gold)"></i> Login do administrador</h3>
+      <button type="button" class="x" data-close="loginModal" aria-label="Fechar">×</button>
+    </div>
+    <div class="modalbody">
+      <p class="hint">Entre com a conta de administrador cadastrada no Supabase.</p>
+      <div class="field"><label for="loginEmail">E-mail</label><!-- Procure a linha do input de e-mail e atualize o value: -->
+<input id="loginEmail" type="email" autocomplete="username" required value=""></div>
+      <div class="field"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+      <p id="loginError" class="status error"></p>
+    </div>
+    <div class="modalfoot">
+      <button type="button" class="secondary" data-close="loginModal">Cancelar</button>
+      <button class="primary" id="loginSubmit" type="submit">Entrar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="modal" id="linkModal">
+  <form id="linkForm">
+    <div class="modalhead">
+      <h3 id="linkModalTitle">Adicionar link</h3>
+      <button type="button" class="x" data-close="linkModal" aria-label="Fechar">×</button>
+    </div>
+    <div class="modalbody">
+      <div class="field">
+        <label for="category">Diretório</label>
+        <select id="category" required>
+          <option>WhatsApp</option>
+          <option>Instagram</option>
+          <option>Sites Web</option>
+          <option>Facebook</option>
+          <option>AVALIAÇÃO DO GOOGLE</option>
+        </select>
+      </div>
+      <div class="field"><label for="linkName">Nome do link</label><input id="linkName" maxlength="100" placeholder="Ex.: Meu WhatsApp" required></div>
+      <div class="field"><label for="linkUrl">Endereço (URL)</label><input id="linkUrl" type="url" maxlength="2000" placeholder="https://..." required></div>
+      <p class="hint">Use endereços que comecem com https:// ou http://.</p>
+      <p id="linkError" class="status error"></p>
+    </div>
+    <div class="modalfoot">
+      <button type="button" class="secondary" data-close="linkModal">Cancelar</button>
+      <button class="primary" id="linkSubmit" type="submit">Salvar link</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const SUPABASE_URL = 'https://jtlbppqxdvjjrsmqgrdu.supabase.co';
+  const SUPABASE_PUBLIC_KEY = 'sb_publishable_fZbzZDiG3aonEim1f0M0XQ_YT5o3uuU';
+ const ADMIN_EMAIL = 'kevinbauer@gmail.com';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY);
+  const categories = [
+    {name:'WhatsApp', icon:'fa-brands fa-whatsapp', desc:'Conversas e contatos'},
+    {name:'Instagram', icon:'fa-brands fa-instagram', desc:'Perfis e publicações'},
+    {name:'Sites Web', icon:'fa-solid fa-globe', desc:'Páginas e ferramentas'},
+    {name:'Facebook', icon:'fa-brands fa-facebook-f', desc:'Páginas e perfis'},
+    {name:'AVALIAÇÃO DO GOOGLE', icon:'fa-solid fa-bookmark', desc:'Outros atalhos importantes'}
+  ];
+  let currentUser = null;
+  let links = [];
+  let editingId = null;
+  const $ = id => document.getElementById(id);
+
+  function setStatus(message='', error=false){ $('status').textContent=message; $('status').classList.toggle('error',error); }
+  function safeUrl(raw){ try { const u=new URL(raw); return ['http:','https:'].includes(u.protocol) ? u.href : null; } catch { return null; } }
+  function showModal(id){ $(id).showModal(); }
+  document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>$(btn.dataset.close).close()));
+
+ function render(){
+    const root=$('directories'); root.replaceChildren();
+    categories.forEach(cat=>{
+      const items=links.filter(link=>link.categoria===cat.name);
+      const section=document.createElement('section'); section.className='directory';
+      const head=document.createElement('div'); head.className='dirhead';
+      
+      // Ícone do Google exclusivo para AVALIAÇÃO DO GOOGLE
+      const icon=document.createElement('div'); icon.className='diricon'; 
+      const i=document.createElement('i'); 
+      i.className = (cat.name === 'AVALIAÇÃO DO GOOGLE') ? 'fa-brands fa-google' : cat.icon;
+      icon.append(i);
+      
+      const text=document.createElement('div'); text.className='dirtext'; const h=document.createElement('h2'); h.textContent=cat.name; const p=document.createElement('p'); p.textContent=cat.desc; text.append(h,p);
+      const count=document.createElement('span'); count.className='count'; count.textContent=items.length+' '+(items.length===1?'link':'links'); head.append(icon,text,count); section.append(head);
+      
+      const list=document.createElement('div'); list.className='links';
+      if(!items.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=currentUser?'Nenhum link aqui ainda. Clique em “Adicionar link”.':'Nenhum link cadastrado nesta categoria.';list.append(empty)}
+      
+      items.forEach(link => {
+        const colors = {
+          'WhatsApp': '#25D366',
+          'Instagram': 'linear-gradient(110deg, #833AB4, #E1306C, #FCAF45)',
+          'Sites Web': '#B38B20',
+          'Facebook': '#1877F2',
+          'AVALIAÇÃO DO GOOGLE': '#424242'
+        };
+
+        const row = document.createElement('div');
+        row.className = 'linkrow';
+
+        const open = document.createElement('a');
+        open.className = 'link-button';
+        open.href = link.url;
+        open.target = '_blank';
+        open.rel = 'noopener noreferrer';
+        open.style.background = colors[cat.name] || '#424242';
+        open.setAttribute('aria-label', 'Acessar ' + link.nome);
+
+        const icon = document.createElement('i');
+        // Ícone do Google também no botão do link da Avaliação do Google
+        icon.className = ((cat.name === 'AVALIAÇÃO DO GOOGLE') ? 'fa-brands fa-google' : cat.icon) + ' link-icon';
+
+        const label = document.createElement('span');
+        label.className = 'link-label';
+        label.textContent = link.nome;
+
+        const arrow = document.createElement('i');
+        arrow.className = 'fa-solid fa-arrow-up-right-from-square arrow';
+
+        open.append(icon, label, arrow);
+        row.append(open);
+
+        if (currentUser) {
+          const actions = document.createElement('div');
+          actions.className = 'linkactions';
+
+          const edit = document.createElement('button');
+          edit.className = 'mini';
+          edit.title = 'Editar';
+          edit.innerHTML = '<i class="fa-solid fa-pen"></i>';
+          edit.addEventListener('click', () => openEdit(link));
+
+          const del = document.createElement('button');
+          del.className = 'mini';
+          del.title = 'Excluir';
+          del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          del.addEventListener('click', () => deleteLink(link));
+
+          actions.append(edit, del);
+          row.append(actions);
+        }
+
+        list.append(row);
+      });
+
+      section.append(list); root.append(section);
+    });
+    $('app').classList.toggle('is-admin',!!currentUser);
+    $('adminBar').classList.toggle('show',!!currentUser);$('loginBtn').classList.toggle('hide',!!currentUser); $('logoutBtn').classList.toggle('hide',!currentUser);$('sessionLabel').textContent=currentUser?'Administrador conectado':'Modo visitante';
+}
+  async function loadLinks(){
+    setStatus(''); $('directories').innerHTML='<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Carregando seus links...</div>';
+    const {data,error}=await db.from('meus_links').select('id,categoria,nome,url,criado_em').order('criado_em',{ascending:true});
+    if(error){$('directories').innerHTML='';setStatus('Não foi possível carregar os links. Detalhe: '+error.message,true);return}
+    links=data||[];render();
+  }
+
+  $('loginBtn').addEventListener('click',()=>{$('loginError').textContent=''; $('loginPassword').value=''; showModal('loginModal'); });$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();currentUser=null;render();setStatus('Você saiu da área administrativa.');await loadLinks()});
+  $('loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();$('loginError').textContent='';$('loginSubmit').disabled=true;
+    const email=$('loginEmail').value.trim().toLowerCase();
+    if(email!==ADMIN_EMAIL){$('loginError').textContent='E-mail não autorizado.';$('loginSubmit').disabled=false;return}
+    const {data,error}=await db.auth.signInWithPassword({email,password:$('loginPassword').value});$('loginSubmit').disabled=false;
+    if(error){$('loginError').textContent='Erro ao entrar. Confira e-mail e senha.';return}
+    if(data.user?.email?.toLowerCase()!==ADMIN_EMAIL){await db.auth.signOut();$('loginError').textContent='Conta não autorizada.';return}
+    currentUser=data.user;$('loginModal').close();render();setStatus('Login realizado.');await loadLinks();
+  });
+  $('addBtn').addEventListener('click',()=>{editingId=null;$('linkForm').reset();$('linkModalTitle').textContent='Adicionar link';$('linkSubmit').textContent='Salvar link';$('linkError').textContent='';showModal('linkModal')});$('refreshBtn').addEventListener('click',loadLinks);
+  function openEdit(link){editingId=link.id;$('linkForm').reset();$('category').value=link.categoria;$('linkName').value=link.nome;$('linkUrl').value=link.url;$('linkModalTitle').textContent='Editar link';$('linkSubmit').textContent='Salvar alterações';$('linkError').textContent='';showModal('linkModal')}$('linkForm').addEventListener('submit',async e=>{
+    e.preventDefault();if(!currentUser){$('linkError').textContent='Entre como administrador.';return}
+    const categoria=$('category').value;const nome=$('linkName').value.trim();const url=safeUrl($('linkUrl').value.trim());
+    if(!url){$('linkError').textContent='URL inválida.';return}
+    $('linkSubmit').disabled=true;$('linkError').textContent='';
+    const payload={categoria,nome,url};
+    const result=editingId===null?await db.from('meus_links').insert(payload):await db.from('meus_links').update(payload).eq('id',editingId);
+    $('linkSubmit').disabled=false;
+    if(result.error){$('linkError').textContent='Erro ao salvar. '+result.error.message;return}$('linkModal').close();setStatus(editingId===null?'Link adicionado.':'Link atualizado.');editingId=null;await loadLinks();
+  });
+  async function deleteLink(link){if(!currentUser)return;if(!confirm('Excluir o link “'+link.nome+'”?'))return;const {error}=await db.from('meus_links').delete().eq('id',link.id);if(error){setStatus('Erro ao excluir.',true);return}setStatus('Link excluído.');await loadLinks()}
+
+  db.auth.onAuthStateChange((_event,session)=>{
+    const user=session?.user||null;
+    currentUser=(user&&user.email?.toLowerCase()===ADMIN_EMAIL)?user:null;
+    render();
+  });
+  (async()=>{const {data}=await db.auth.getSession();const user=data.session?.user||null;currentUser=(user?.email?.toLowerCase()===ADMIN_EMAIL)?user:null;await loadLinks()})();
+</script>
+
+<script>
+(function(){
+  const fx=document.createElement('div');fx.className='bg-fx';
+  fx.innerHTML='<div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>';
+  document.body.prepend(fx);
+  const c=document.createElement('canvas');c.id='spark';document.body.prepend(c);
+  const ctx=c.getContext('2d');let W,H,P=[];
+  const size=()=>{W=c.width=innerWidth;H=c.height=innerHeight};size();addEventListener('resize',size);
+  for(let i=0;i<55;i++)P.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.8+.4,v:Math.random()*.4+.1,o:Math.random()});
+  (function loop(){ctx.clearRect(0,0,W,H);P.forEach(p=>{p.y-=p.v;p.o+=.01;if(p.y<0){p.y=H;p.x=Math.random()*W}
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fillStyle='rgba(197, 155, 39,'+(.2+Math.abs(Math.sin(p.o))*.4)+')';ctx.fill()});requestAnimationFrame(loop)})();
+
+  ['header','.intro'].forEach((s,i)=>{const e=document.querySelector(s);if(e){e.classList.add('reveal');e.style.animationDelay=i*.15+'s'}});
+  const root=document.getElementById('directories');
+  const animate=()=>root.querySelectorAll('.directory').forEach((d,i)=>{
+    d.classList.add('reveal');d.style.animationDelay=(.25+i*.1)+'s';
+    d.querySelectorAll('.linkrow').forEach((r,j)=>{r.classList.add('reveal');r.style.animationDelay=(.4+i*.1+j*.06)+'s'});
+    if(!d.dataset.tilt){d.dataset.tilt=1;
+      d.addEventListener('mousemove',e=>{const b=d.getBoundingClientRect(),x=(e.clientX-b.left)/b.width-.5,y=(e.clientY-b.top)/b.height-.5;
+        d.style.transform=`perspective(900px) rotateX(${-y*5}deg) rotateY(${x*5}deg) translateY(-4px)`});
+      d.addEventListener('mouseleave',()=>d.style.transform='')}
+  });
+  new MutationObserver(animate).observe(root,{childList:true});animate();
+})();
+</script>
+</body>
+</html>
